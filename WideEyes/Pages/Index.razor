@@ -1,0 +1,68 @@
+﻿@page "/"
+
+@using System.Threading;
+
+
+
+<div class="container-fluid">
+    <div class="row">
+
+
+
+        @foreach (var str in CameraService.Worker.CameraDetails)
+        {
+
+            <div class="col-12 col-md-6">
+                @{
+                    string imgSrc = "";
+                    var lastFrames = CameraService.Worker.LastFrame;
+
+                    if (lastFrames.ContainsKey(str.Title))
+                    {
+                        if (DateTime.Now - lastFrames[str.Title].When > TimeSpan.FromSeconds(30))
+                        {
+                            <div class="alert alert-warning" role="alert">
+                                <span>@str.Title not real time</span>
+                            </div>
+                        }
+                        var base64 = Convert.ToBase64String(lastFrames[str.Title].JPEG);
+                        imgSrc = String.Format("data:image/jpeg;base64,{0}", base64);
+                        <a href="single/@str.Title">
+                            <img src="@imgSrc" class="camera" />
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <span>@str.Title not available</span>
+                        </div>
+
+
+                    }
+                }
+            </div>
+        }
+
+
+    </div>
+</div>
+
+
+@code {
+
+    Timer timer;
+    protected override async Task OnInitializedAsync()
+    {
+        timer = new Timer(new TimerCallback(_ =>
+        {
+
+        // Note that the following line is necessary because otherwise
+        // Blazor would not recognize the state change and not refresh the UI
+
+        InvokeAsync(this.StateHasChanged);
+        }), null, 2000, 2000);
+    }
+
+
+
+}

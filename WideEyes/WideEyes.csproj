@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>b6918440-d663-44c4-ab57-ce507ffc11b6</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CameraService\CameraService.csproj" />
+    <ProjectReference Include="..\Camera\Camera.csproj" />
+  </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="echo namespace WideEyes { public static class Build { public static string Timestamp = &quot;%25DATE%25 %25TIME%25&quot;;}} &gt; &quot;$(ProjectDir)\BuildTimestamp.cs&quot;" />
+  </Target>
+
+</Project>

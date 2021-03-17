@@ -1,0 +1,62 @@
+﻿@page "/motion"
+
+@using System.Threading;
+
+
+
+<div class="container-fluid">
+    <div class="row">
+
+
+
+        @foreach (var str in CameraService.Worker.CameraDetails)
+        {
+
+            <div class="col-12 col-md-6">
+                @{
+                    string imgSrc = "";
+
+                    if (CameraService.Worker.LastMotionGif.ContainsKey(str.Title))
+                    {
+                        var base64 = Convert.ToBase64String(CameraService.Worker.LastMotionGif[str.Title].GIF);
+                        imgSrc = String.Format("data:image/gif;base64,{0}", base64);
+                        <p class="motion-time-ago">@CameraService.Worker.LastMotionGif[str.Title].DescribeTimeAgo()</p>
+                        <img src="@imgSrc" class="camera" />
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <span>@str.Title not available</span>
+                        </div>
+
+
+                    }
+                }
+            </div>
+        }
+
+
+    </div>
+</div>
+
+
+
+
+@code {
+
+    Timer timer;
+    protected override async Task OnInitializedAsync()
+    {
+        timer = new Timer(new TimerCallback(_ =>
+        {
+
+        // Note that the following line is necessary because otherwise
+        // Blazor would not recognize the state change and not refresh the UI
+
+        InvokeAsync(this.StateHasChanged);
+        }), null, 2000, 2000);
+    }
+
+
+
+}

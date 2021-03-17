@@ -1,0 +1,72 @@
+﻿@page "/single"
+@page "/single/{title}"
+
+@using System.Threading;
+
+
+<select class="form-control selectpicker" @bind="Title">
+    <option>--select--</option>
+    @foreach (var item in CameraService.Worker.CameraDetails)
+    {
+        <option value="@item.Title">@item.Title</option>
+    }
+</select>
+
+@{
+    string imgSrc = "";
+    if (!String.IsNullOrEmpty(Title))
+    {
+        if (CameraService.Worker.LastFrame.ContainsKey(Title))
+        {
+            if (DateTime.Now - CameraService.Worker.LastFrame[Title].When > TimeSpan.FromSeconds(30))
+            {
+                <div class="alert alert-warning" role="alert">
+                    <span>@Title not real time</span>
+                </div>
+            }
+            var base64 = Convert.ToBase64String(CameraService.Worker.LastFrame[Title].OriginalFrameJPEG);
+            imgSrc = String.Format("data:image/gif;base64,{0}", base64);
+            <img src="@imgSrc" class="camera" />
+        }
+        else
+        {
+            <div class="alert alert-warning" role="alert">
+                <span>@Title not available</span>
+            </div>
+
+
+        }
+    }
+}
+
+
+
+
+
+@code {
+
+    [Parameter]
+    public string Title { get; set; }
+
+
+}
+
+@code {
+
+    Timer timer;
+    protected override async Task OnInitializedAsync()
+    {
+        timer = new Timer(new TimerCallback(_ =>
+        {
+
+        // Note that the following line is necessary because otherwise
+        // Blazor would not recognize the state change and not refresh the UI
+
+        InvokeAsync(this.StateHasChanged);
+        }), null, 2000, 2000);
+    }
+
+
+
+}
+

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AnimatedGif" Version="1.0.5" />
+    <PackageReference Include="OpenCvSharp4" Version="4.4.0.20200915" />
+    <PackageReference Include="OpenCvSharp4.runtime.ubuntu.18.04-x64" Version="4.4.0.20200915" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.4.0.20200915" />
+    <PackageReference Include="RtspClientSharp" Version="1.3.3" />
+  </ItemGroup>
+
+</Project>

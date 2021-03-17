@@ -1,0 +1,113 @@
+﻿@page "/cameraControl"
+ 
+@using System.Threading;
+
+
+
+<div class="container-fluid">
+    <table>
+        <tr>
+            <td>Core process memory usage</td>
+            <td>@System.Diagnostics.Process.GetCurrentProcess().WorkingSet64.ToString("N0")</td>
+        </tr>
+        <tr>
+            <td>FFMpeg processes</td>
+            <td>@System.Diagnostics.Process.GetProcessesByName("ffmpeg").Length</td>
+        </tr>
+        <tr>
+            <td>Uptime</td>
+            <td>@((DateTime.UtcNow - Program.StartupUTC).ToString("c"))</td>
+        </tr>
+    </table>             
+    <br />
+
+
+    @foreach (var str in CameraService.Worker.CameraDetails)
+    {
+
+        <div class="row row-control">
+
+            <div class="col-3">
+                @str.Title
+            </div>
+
+            <div class="col-lg-1 col-md-1 col-sm-3">
+                <button type="button" class="btn btn-control btn-success" disabled="@(!CanStart(str.Title))" @onclick="@(_ => StartCamera(str.Title))">Start</button>
+            </div><div class="col-lg-1 col-md-1 col-sm-3">
+                <button type="button" class="btn btn-control btn-danger" disabled="@(!CanStop(str.Title))" @onclick="@(_ => StopCamera(str.Title))">Stop</button>
+            </div><div class="col-lg-1 col-md-1 col-sm-3">
+                <button type="button" class="btn btn-control btn-warning" disabled="@(!CanStop(str.Title))" @onclick="@(_ => CycleCamera(str.Title))">Cycle</button>
+            </div>
+
+
+        </div>
+    }
+
+    <hr />
+
+    <div class="row">
+        <div class="col-3">Core process cycle</div>
+        <div class="col-lg-1 col-md-3 col-sm-3">
+            <button type="button" class="btn btn-warning" @onclick="@(_ => StopApp())">Cycle</button>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private bool CanStart(string Title)
+    {
+        return (CameraService.Worker.Cancellations.ContainsKey(Title) &&
+            CameraService.Worker.Cancellations[Title].IsCancellationRequested);
+    }
+
+    private bool CanStop(string Title)
+    {
+        return (CameraService.Worker.Cancellations.ContainsKey(Title) &&
+            !CameraService.Worker.Cancellations[Title].IsCancellationRequested);
+    }
+
+
+    private void StartCamera(string Title)
+    {
+        CameraService.Worker.Cancellations.Remove(Title, out _); // null the token, it will make a new one
+    }
+    private void StopCamera(string Title)
+    {
+        var token = CameraService.Worker.Cancellations.ContainsKey(Title) ? CameraService.Worker.Cancellations[Title] : null;
+        token?.Cancel();
+
+    }
+
+    private void CycleCamera(string Title)
+    {
+        StopCamera(Title);
+        StartCamera(Title);
+
+    }
+
+    private void StopApp()
+    {
+        Program.MyHost.StopAsync();
+    }
+}
+
+
+@code {
+
+    Timer timer;
+    protected override async Task OnInitializedAsync()
+    {
+        timer = new Timer(new TimerCallback(_ =>
+        {
+
+        // Note that the following line is necessary because otherwise
+        // Blazor would not recognize the state change and not refresh the UI
+
+        InvokeAsync(this.StateHasChanged);
+        }), null, 2000, 2000);
+    }
+
+
+
+}

@@ -1,0 +1,104 @@
+﻿@page "/summaries"
+@using System.Text.Json;
+
+<h3>Summaries</h3>
+<style>
+    .imgBtnPlay {
+        left: 45%;
+        top: 40%;
+        position: absolute;
+    }
+
+        .imgBtnPlay img {
+            width: 64px;
+            height: 64px;
+            opacity: 0.75;
+        }
+
+    .btn:hover .imgBtnPlay img {
+        opacity: 1.0;
+    }
+
+    .card-header {
+        color: black;
+    }
+
+    .card {
+        max-width: 600px;
+    }
+</style>
+
+<p>
+    @foreach (var sd in GetSummaries())
+    {
+        <div class="card">
+            <div class="card-header">
+                <div style="float: right;">@sd.TimeStamp</div>
+                @sd.Camera
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-xs-offset-2 col-xs-8" style="text-align: center; position: relative;">
+                        <button type="button" class="btn btnPlay" href="@(sd.Basefilename + ".mp4")" onclick="window.open('@(sd.Basefilename + ".mp4")')">
+                            <div class="imgBtnPlay">
+                                <img src="play-button-overlay.png">
+                            </div>
+                            <img class="imgSummary" src="@(sd.Basefilename + ".gif")">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br />
+    }
+
+
+</p>
+
+@code {
+    const string urlPart = "/Storage/summary/";
+
+    protected struct SummaryData
+    {
+        public string Camera;
+        public string TimeStamp;
+        public string Basefilename;
+    }
+
+    string storagePath;
+    protected override async Task OnInitializedAsync()
+    {        
+        storagePath = System.IO.Path.Combine(CameraService.Worker.Settings["StoragePath"], "summary");
+
+    }
+
+    protected string MakeTimestamp(string file)
+    {
+        var whens = JsonSerializer.Deserialize<DateTime[]>(System.IO.File.ReadAllText(file));
+        var ts = whens[0].ToShortDateString() + "  " + whens[0].ToShortTimeString();
+
+        if (whens.Length > 1)
+        {
+            ts += " - " + whens.Last().ToShortTimeString();
+        }
+        return ts;
+
+    }
+
+    protected IEnumerable<SummaryData> GetSummaries()
+    {
+        return System.IO.Directory.EnumerateFiles(storagePath, "*.json")
+            .OrderByDescending(x => x.Split('_')[2])
+            .Select(x =>
+            {
+                return new SummaryData
+                {
+                    Camera = x.Split('_')[1],
+                    TimeStamp = MakeTimestamp(x),
+                    Basefilename = System.IO.Path.Combine(urlPart, System.IO.Path.GetFileNameWithoutExtension(x))
+                };
+            });
+            
+
+    }
+}
